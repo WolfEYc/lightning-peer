@@ -76,12 +76,9 @@ const Meeting = () => {
             {state.localStream}
             <div className = "px-6"></div>
             {state.remoteStream}
-
-            <BottomBar/>
+            {lightning.localStreamActive() ? <BottomBar/> : null}
             <ChatBar/>
 
-            {state.remoteShare}
-            {lightning.localStreamActive() ? <><AudioButton /> <VideoButton /> <ShareButton /></>: null }
         </div>
     )
 }

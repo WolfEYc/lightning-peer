@@ -1,6 +1,7 @@
 import { useState } from "react";
 import lightning from "../client/lightning"
-
+import MicIcon from './micIcon'
+import {BsFillMicFill} from 'react-icons/bs'
 
 const AudioButton = () => {
 
@@ -12,7 +13,7 @@ const AudioButton = () => {
     }
 
     return (
-        <button onClick={handleClick}>{ muted ? 'audio muted' : 'audio unmuted' }</button>
+        <button onClick={handleClick}>{ muted ? <MicIcon/> : <BsFillMicFill size="30" /> }</button>
     )
 }
 
