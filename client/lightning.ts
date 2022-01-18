@@ -78,8 +78,9 @@ class Lightning extends EventEmitter {
     getLocalMedia = async () => {
 
 
-        if(this.remotePeer.peer?.connected && this.localUser.stream) {
-            this.remotePeer.peer.removeStream(this.localUser.stream);     
+        if(this.remotePeer.peer?.connected && this.localUser.stream && this.localUser.streamAdded) {
+            this.remotePeer.peer.removeStream(this.localUser.stream);
+            this.localUser.streamAdded = false;
         }
 
         this.localUser.stream = await navigator.mediaDevices.getUserMedia({
@@ -107,8 +108,9 @@ class Lightning extends EventEmitter {
 
     getShareScreen = async () => {
 
-        if(this.remotePeer.peer?.connected && this.localUser.shareStream) {
+        if(this.remotePeer.peer?.connected && this.localUser.shareStream && this.localUser.shareAdded) {
             this.remotePeer.peer.removeStream(this.localUser.shareStream);
+            this.localUser.shareAdded = false;
         }
 
         this.localUser.shareStream = await navigator.mediaDevices.getDisplayMedia({
