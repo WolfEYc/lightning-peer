@@ -35,6 +35,21 @@ class lightningSignalServer extends Server {
                     this.to(remote_socket_id).emit('signal-data', socket.id, data);
                 })
 
+                socket.on('associate', (remote_socket_id: string, stream_id: string, type: string) => {
+                    console.log(remote_socket_id, stream_id, type)
+
+                    this.to(remote_socket_id).emit('associate', socket.id, stream_id, type);
+                })
+
+                socket.on('associated', (remote_socket_id: string, stream_id: string) => {
+                    this.to(remote_socket_id).emit('associated', socket.id, stream_id);
+                })
+
+                socket.on('stopShare', () => {
+                    socket.to(room_id).emit('stopShare');
+                })
+                
+
                 socket.emit('joined-room');
 
                 socket.join(room_id);

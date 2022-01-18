@@ -1,5 +1,5 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import lightningSignalServer from '../../server/lightning-signaller';
+import lightningSignalServer from '../../server/server';
 
 
 const iohandler = (
