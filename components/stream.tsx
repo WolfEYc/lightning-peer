@@ -3,6 +3,7 @@ import ReactPlayer from 'react-player'
 interface props {
     user_name?: string
     stream?: MediaStream
+    muted: boolean
 }
 
 const Stream = (props: props) => {

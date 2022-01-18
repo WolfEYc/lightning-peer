@@ -1,7 +1,7 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import lightning from "../client/webRTC-connection";
+import lightning from "../client/lightning";
 import Loading from "../components/loading";
 import Meeting from "../components/meeting";
 import UserName from "../components/username";
