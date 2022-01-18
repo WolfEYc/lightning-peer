@@ -45,9 +45,9 @@ const meetingPage: NextPage = () => {
     }, [pid])
     
     return (
-        <>
+        <div className="bg-gray-700 h-screen">
             {view}
-        </>               
+        </div>               
     )
 }
 

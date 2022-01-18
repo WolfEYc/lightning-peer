@@ -3,7 +3,11 @@ import lightning from "../client/lightning";
 import AudioButton from "./AudioButton";
 import ShareButton from "./ShareButton";
 import Stream from "./stream";
+import TopBar from "./topBar";
+import ChatBar from "./chatBar";
+import BottomBar from "./bottomBar";
 import VideoButton from "./VideoButton";
+
 
 const Meeting = () => {
     
@@ -66,9 +70,16 @@ const Meeting = () => {
     }, [])
     
     return (
-        <div>
+        <div className = "fixed left-0 m-0 right-80 bg-gray-700 h-screen text-gray-500 flex top-12 py-20 pt-40">
+            <TopBar/>
+            <div className = "px-12"></div>
             {state.localStream}
+            <div className = "px-6"></div>
             {state.remoteStream}
+
+            <BottomBar/>
+            <ChatBar/>
+
             {state.remoteShare}
             {lightning.localStreamActive() ? <><AudioButton /> <VideoButton /> <ShareButton /></>: null }
         </div>
