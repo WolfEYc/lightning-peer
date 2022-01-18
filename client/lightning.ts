@@ -79,6 +79,7 @@ class Lightning extends EventEmitter {
 
 
         if(this.remotePeer.peer?.connected && this.localUser.stream && this.localUser.streamAdded) {
+            //beanos
             this.remotePeer.peer.removeStream(this.localUser.stream);
             this.localUser.streamAdded = false;
         }
