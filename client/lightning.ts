@@ -109,6 +109,8 @@ class Lightning extends EventEmitter {
     getShareScreen = async () => {
 
         if(this.remotePeer.peer?.connected && this.localUser.shareStream && this.localUser.shareAdded) {
+
+            //sugma
             this.remotePeer.peer.removeStream(this.localUser.shareStream);
             this.localUser.shareAdded = false;
         }
