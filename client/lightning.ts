@@ -115,13 +115,16 @@ class Lightning extends EventEmitter {
             this.remotePeer.peer.removeStream(this.localUser.shareStream);
             this.localUser.shareAdded = false;
         }
+        try{
+            this.localUser.shareStream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: true
+            })
+        } catch (err) {
+            return false;
+        }
 
-        this.localUser.shareStream = await navigator.mediaDevices.getDisplayMedia({
-            video: true,
-            audio: true
-        })
-
-        if(this.localUser.shareStream.active){
+        if(this.localUser.shareStream?.active){
 
             if(this.remotePeer.peer?.connected) {
                 if(this.localUser.socket){
@@ -293,17 +296,12 @@ class Lightning extends EventEmitter {
     }
 
     localStreamActive = () => {
-        
         return lightning.localUser.stream?.getAudioTracks()[0] != undefined
-        
     }
 
     localShareActive = () => {
         return lightning.localUser.shareStream?.getVideoTracks()[0]?.enabled
     }
-
-
-    
 
 }
 
