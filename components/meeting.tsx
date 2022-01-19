@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react"
 import lightning from "../client/lightning";
-import AudioButton from "./AudioButton";
-import ShareButton from "./ShareButton";
 import Stream from "./stream";
 import TopBar from "./topBar";
 import ChatBar from "./chatBar";
 import BottomBar from "./bottomBar";
-import VideoButton from "./VideoButton";
+
 
 
 const Meeting = () => {
