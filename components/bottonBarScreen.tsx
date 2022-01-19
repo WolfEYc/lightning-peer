@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { MdOutlineScreenShare, MdComputer } from "react-icons/md"
 import lightning from '../client/lightning'
 
-const bottomBarScreen = () => {
+const BottomBarScreen = () => {
     const [expanded, setExpanded] = useState(false)
     
     const handleClick = async () => {
@@ -28,4 +28,4 @@ const bottomBarScreen = () => {
     );
 }
 
-export default bottomBarScreen;
+export default BottomBarScreen;

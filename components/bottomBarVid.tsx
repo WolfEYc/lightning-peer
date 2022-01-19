@@ -3,7 +3,7 @@ import {BsFillCameraVideoFill} from 'react-icons/bs'
 import lightning from '../client/lightning'
 import VideoIcon from './videoIcon'
 
-const bottomBarVid = () => {
+const BottomBarVid = () => {
     const [expanded, setExpanded] = useState(false)
 
     const handleClick = () => {
@@ -23,4 +23,4 @@ const bottomBarVid = () => {
     );
 }
 
-export default bottomBarVid;
+export default BottomBarVid;
