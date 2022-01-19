@@ -8,7 +8,7 @@ import UserName from "../components/username";
 
 
 
-const meetingPage: NextPage = () => {
+const MeetingPage: NextPage = () => {
     
     
     const router = useRouter();
@@ -27,7 +27,7 @@ const meetingPage: NextPage = () => {
                 lightning.joinRoom(pid.toString());
             }
 
-            if(lightning.localUser.user_name.length < 3) {
+            if(lightning.localUser.user_name && lightning.localUser.user_name?.length < 3) {
                 
                 const handleSubmit = (username: string) => {
                     if(username.length > 3){
@@ -53,4 +53,4 @@ const meetingPage: NextPage = () => {
 
 
 
-export default meetingPage
+export default MeetingPage

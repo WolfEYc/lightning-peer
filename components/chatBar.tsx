@@ -1,5 +1,5 @@
 
-const chatBar = () => {
+const ChatBar = () => {
     return(
         <div className="fixed top-14 right-0 h-screen bg-gray-800 pt-6 pl-4 font-bold text-gray-500 text-sm w-1/5">
             Message here
@@ -10,4 +10,4 @@ const chatBar = () => {
     )
 }
 
-export default chatBar;
+export default ChatBar;

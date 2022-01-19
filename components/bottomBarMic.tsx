@@ -3,7 +3,7 @@ import { BsFillMicFill } from 'react-icons/bs'
 import MicIcon from './micIcon'
 import lightning from '../client/lightning'
 
-const bottomBarMic = () => {
+const BottomBarMic = () => {
     const [pressed, setPressed] = useState(false)
 
     const handleClick = () => {
@@ -23,4 +23,4 @@ const bottomBarMic = () => {
     );
 }
 
-export default bottomBarMic;
+export default BottomBarMic;
