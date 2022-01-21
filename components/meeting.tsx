@@ -9,74 +9,72 @@ import BottomBar from "./bottomBar";
 
 const Meeting = () => {
     
-    const [state, setState] = useState({
-        localStream: <Stream user_name={lightning.localUser.user_name} muted />,
-        remoteStream: <Stream muted />,
-        remoteShare: <Stream muted />
-    })
-
+    const [localStream, setLocalStream] = useState({ stream: <Stream user_name={lightning.localUser.user_name} muted />, state: false });
+    const [remoteStream, setRemoteStream] = useState({ stream: <Stream muted />, state: false });
+    const [remoteShare, setRemoteShare] = useState({ stream: <Stream muted />, state: false });
 
     useEffect(() => {
 
         lightning.on('new-stream', () => {
-            setState(prevState => ({
-                localStream: prevState.localStream,
-                remoteStream: <Stream user_name={lightning.remotePeer.user_name} stream={lightning.remotePeer.stream} muted={false}/>,
-                remoteShare: prevState.remoteShare
-            }));
-            
+            setRemoteStream({ 
+                stream: <Stream user_name={lightning.remotePeer.user_name} stream={lightning.remotePeer.stream} muted={false} />,
+                state: true
+            });     
         })
 
         lightning.on('new-share', () => {
-            setState(prevState => ({
-                localStream: prevState.localStream,
-                remoteStream: prevState.remoteStream,
-                remoteShare: <Stream muted={false} stream={lightning.remotePeer.shareStream} />             
-            }));
+            setRemoteShare({
+                stream: <Stream stream={lightning.remotePeer.shareStream} muted={false} />,  
+                state: false
+            });
         })
 
         lightning.on('end-share', () => {
-            setState(prevState => ({
-                localStream: prevState.localStream,
-                remoteStream: prevState.remoteStream,
-                remoteShare: <Stream muted />         
-            }));
+            setRemoteShare({
+                stream: <Stream muted />,
+                state: false
+            });
         })
 
         lightning.on('local-stream-updated', () => {
-            setState(prevState => ({
-                localStream: <Stream user_name={lightning.localUser.user_name} stream={lightning.localUser.stream} muted/>,
-                remoteStream: prevState.remoteStream,
-                remoteShare: prevState.remoteShare              
-            }));
+            setLocalStream({
+                stream: <Stream user_name={lightning.localUser.user_name} stream={lightning.localUser.stream} muted />,
+                state: true             
+            });
         })
-
-        
 
         lightning.on('user-disconnected', () => {
-            setState(prevState => ({
-                localStream: prevState.localStream,
-                remoteStream: <Stream muted />,
-                remoteShare: <Stream muted />
-            }));
+            setRemoteStream({
+                stream: <Stream muted />,
+                state: false
+            });
+
+            setRemoteShare({
+                stream: <Stream muted />,
+                state: false
+            });
         })
 
+        lightning.on('remote-video-enabled', (enabled: boolean) => {
+            console.log('remote-video-enabled', enabled);
+        })
 
+        lightning.on('remote-audio-enabled', (enabled: boolean) => {
+            console.log('remote-audio-enabled', enabled);
+        })
 
         lightning.getLocalMedia();
-
     }, [])
     
     return (
         <div className = "fixed left-0 m-0 right-80 bg-gray-700 h-screen text-gray-500 flex top-12 py-20 pt-40">
             <TopBar/>
             <div className = "px-12"></div>
-            {state.localStream}
+            {localStream.stream}
             <div className = "px-6"></div>
-            {state.remoteStream}
+            {remoteStream.stream}
             {lightning.localStreamActive() ? <BottomBar/> : null}
             <ChatBar/>
-
         </div>
     )
 }
