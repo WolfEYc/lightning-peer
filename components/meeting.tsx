@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import lightning from "../client/lightning";
-import Stream from "./stream";
 import TopBar from "./topBar";
 import ChatBar from "./chatBar";
 import BottomBar from "./bottomBar";
