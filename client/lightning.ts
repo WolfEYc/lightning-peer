@@ -22,19 +22,11 @@ interface RemotePeer {
     shareStream_id?: string
 }
 
-export interface Display {
-    stream?: MediaStream,
-    name?: string,
-    state: boolean
-}
 
 class Lightning extends EventEmitter {
 
     localUser: LocalUser
     remotePeer: RemotePeer
-    localDisplay: Display
-    remoteDisplay: Display
-    shareDisplay: Display
 
     constructor() {
         super()
@@ -82,13 +74,11 @@ class Lightning extends EventEmitter {
         
         this.localUser = { user_name: user_name ? user_name : undefined, streamAdded: false, shareAdded: false }
         this.remotePeer = { }
-        this.localDisplay = { name: user_name ? user_name : undefined, state: false }
-        this.remoteDisplay = { state: false }
-        this.shareDisplay = { state: false }
+
     }
 
     getState = () => {
-        return (+this.localDisplay.state) + (+this.remoteDisplay.state * 2) + (+this.shareDisplay.state * 4)
+        return (+(this.localUser.stream != undefined)) + (+(this.remotePeer.stream != undefined) * 2) * (+(this.remotePeer.stream != undefined) * 4)
     }
 
     getLocalMedia = async () => {
