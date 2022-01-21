@@ -4,12 +4,12 @@ import { EventEmitter } from 'events'
 
 
 interface LocalUser {
-    socket?: Socket
+    socket?: Socket,
     user_name?: string,
-    stream?: MediaStream
-    streamAdded: boolean
-    shareStream?: MediaStream
-    shareAdded: boolean
+    stream?: MediaStream,
+    streamAdded: boolean,
+    shareStream?: MediaStream,
+    shareAdded: boolean,
 }
 
 interface RemotePeer {
@@ -22,11 +22,20 @@ interface RemotePeer {
     shareStream_id?: string
 }
 
+export interface Display {
+    stream?: MediaStream,
+    name?: string,
+    state: boolean
+}
+
 class Lightning extends EventEmitter {
 
     localUser: LocalUser
     remotePeer: RemotePeer
-    
+    localDisplay: Display
+    remoteDisplay: Display
+    shareDisplay: Display
+
     constructor() {
         super()
 
@@ -73,6 +82,13 @@ class Lightning extends EventEmitter {
         
         this.localUser = { user_name: user_name ? user_name : undefined, streamAdded: false, shareAdded: false }
         this.remotePeer = { }
+        this.localDisplay = { name: user_name ? user_name : undefined, state: false }
+        this.remoteDisplay = { state: false }
+        this.shareDisplay = { state: false }
+    }
+
+    getState = () => {
+        return (+this.localDisplay.state) + (+this.remoteDisplay.state * 2) + (+this.shareDisplay.state * 4)
     }
 
     getLocalMedia = async () => {
@@ -102,9 +118,7 @@ class Lightning extends EventEmitter {
             
         }
 
-        
-
-        this.emit('local-stream-updated');
+        this.emit('state-change');
     }
 
     getShareScreen = async () => {
@@ -138,8 +152,6 @@ class Lightning extends EventEmitter {
                     this.localUser.socket.emit('associate', this.remotePeer.socket_id, this.localUser.shareStream.id, 'share');
                 }
             }
-
-        
 
             this.emit('local-shareStream-updated')
 
@@ -254,13 +266,13 @@ class Lightning extends EventEmitter {
                 console.log('new share', stream)
                 this.localUser.socket?.on('stopShare', () => {
                     this.remotePeer.shareStream = undefined;
-                    this.emit('end-share');
+                    this.emit('state-change');
                 })
-                this.emit('new-share');
+                this.emit('state-change');
             } else {
                 this.remotePeer.stream = stream;
-                console.log('new stream', stream)
-                this.emit('new-stream');
+                //console.log('new stream', stream)
+                this.emit('state-change');
             }
             
         })
@@ -276,7 +288,7 @@ class Lightning extends EventEmitter {
                 if(socket_id == remote_socket_id) {
                     peer.destroy();
                     console.log(`${socket_id} left`);
-                    this.emit('user-disconnected', socket_id);
+                    this.emit('state-change');
                 }            
             })
         }
