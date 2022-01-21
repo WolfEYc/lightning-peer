@@ -25,7 +25,7 @@ const Meeting = () => {
         lightning.on('new-share', () => {
             setRemoteShare({
                 stream: <Stream stream={lightning.remotePeer.shareStream} muted={false} />,  
-                state: false
+                state: true
             });
         })
 
