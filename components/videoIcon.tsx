@@ -1,6 +1,6 @@
 import {BsFillCameraVideoFill,BsSlashLg} from 'react-icons/bs'
 
-const videoIcon = () => {
+const VideoIcon = () => {
     return(
         <span style={{ display: 'inline-block', position: 'relative' }}>
           <BsFillCameraVideoFill textAnchor="middle" alignmentBaseline="middle" size="30" />
@@ -15,4 +15,4 @@ const videoIcon = () => {
     )
 }
 
-export default videoIcon;
+export default VideoIcon;

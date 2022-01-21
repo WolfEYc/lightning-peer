@@ -1,15 +1,16 @@
 import BottomBarVid from "./bottomBarVid";
 import BottomBarScreen from "./bottonBarScreen";
-import AudioButton from "./AudioButton";
 
-const bottomBar = () => {
+import BottomBarMic from "./bottomBarMic";
+
+const BottomBar = () => {
     return(
         <div className = "fixed bottom-0 m-0 flex bg-gray-900 h-16 border-t border-gray-800 shadow-xl pt-3 justify-center w-5/6">
            <BottomBarVid/>
-           <AudioButton/>
+           <BottomBarMic/>
            <BottomBarScreen/>
         </div>
     )
 }
 
-export default bottomBar;
+export default BottomBar;
