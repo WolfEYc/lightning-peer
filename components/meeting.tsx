@@ -11,8 +11,8 @@ import Zero from "./screens/0";
 
 const Meeting = () => {
 
-    const [state, setState] = useState(<Zero />);
 
+    const [state, setState] = useState(<Zero />);
     useEffect(() => {
 
         lightning.on('state-change', () => {
