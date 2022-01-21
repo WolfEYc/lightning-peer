@@ -239,6 +239,13 @@ class Lightning extends EventEmitter {
             }
         })
 
+        peer.on('data', (data: string) => {
+            const msg = JSON.parse(data);
+
+            this.emit(msg.type, ...msg.payload);
+        })
+
+        
         
         peer.on('stream', (stream) => {
 
@@ -283,15 +290,23 @@ class Lightning extends EventEmitter {
 
     }
 
-    setVideo = (muted: boolean) => {
+    setVideo = (enabled: boolean) => {
         if(this.localUser.stream){
-            this.localUser.stream.getVideoTracks()[0].enabled = muted
+            this.localUser.stream.getVideoTracks()[0].enabled = enabled
+            this.remotePeer.peer?.send(JSON.stringify({
+                type: 'remote-video-enabled',
+                payload: [enabled]
+            }));
         }
     }
 
-    setAudio = (muted: boolean) => {
+    setAudio = (enabled: boolean) => {
         if(this.localUser.stream){
-            this.localUser.stream.getAudioTracks()[0].enabled = muted
+            this.localUser.stream.getAudioTracks()[0].enabled = enabled
+            this.remotePeer.peer?.send(JSON.stringify({
+                type: 'remote-audio-enabled',
+                payload: [enabled]
+            }));
         }
     }
 
