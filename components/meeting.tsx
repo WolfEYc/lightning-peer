@@ -4,14 +4,14 @@ import Stream from "./stream";
 import TopBar from "./topBar";
 import ChatBar from "./chatBar";
 import BottomBar from "./bottomBar";
+import One from "./screens/one";
+import Zero from "./screens/zero";
 
 
 
 const Meeting = () => {
-    
-    const [localStream, setLocalStream] = useState({ stream: <Stream user_name={lightning.localUser.user_name} muted />, state: false });
-    const [remoteStream, setRemoteStream] = useState({ stream: <Stream muted />, state: false });
-    const [remoteShare, setRemoteShare] = useState({ stream: <Stream muted />, state: false });
+
+    const [state, setState] = useState(<Zero />);
 
     useEffect(() => {
 
@@ -19,7 +19,7 @@ const Meeting = () => {
             setRemoteStream({ 
                 stream: <Stream user_name={lightning.remotePeer.user_name} stream={lightning.remotePeer.stream} muted={false} />,
                 state: true
-            });     
+            }); 
         })
 
         lightning.on('new-share', () => {
@@ -69,10 +69,7 @@ const Meeting = () => {
     return (
         <div className = "fixed left-0 m-0 right-80 bg-gray-700 h-screen text-gray-500 flex top-12 py-20 pt-40">
             <TopBar/>
-            <div className = "px-12"></div>
-            {localStream.stream}
-            <div className = "px-6"></div>
-            {remoteStream.stream}
+            <One localStream={localStream}/>
             {lightning.localStreamActive() ? <BottomBar/> : null}
             <ChatBar/>
         </div>

@@ -4,12 +4,13 @@ import { EventEmitter } from 'events'
 
 
 interface LocalUser {
-    socket?: Socket
+    socket?: Socket,
     user_name?: string,
-    stream?: MediaStream
-    streamAdded: boolean
-    shareStream?: MediaStream
-    shareAdded: boolean
+    stream?: MediaStream,
+    streamAdded: boolean,
+    shareStream?: MediaStream,
+    shareAdded: boolean,
+    display: Display
 }
 
 interface RemotePeer {
@@ -20,6 +21,14 @@ interface RemotePeer {
     stream_id?: string,
     shareStream?: MediaStream,
     shareStream_id?: string
+    display: Display,
+    shareDisplay: Display
+}
+
+export interface Display {
+    stream?: MediaStream,
+    name?: string,
+    state: boolean
 }
 
 class Lightning extends EventEmitter {
