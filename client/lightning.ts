@@ -1,7 +1,6 @@
-import SimplePeer from 'simple-peer'
+import SimplePeer, { SimplePeerData } from 'simple-peer'
 import io, { Socket } from 'socket.io-client'
 import { EventEmitter } from 'events'
-
 
 interface LocalUser {
     socket?: Socket,
@@ -20,6 +19,12 @@ interface RemotePeer {
     stream_id?: string,
     shareStream?: MediaStream,
     shareStream_id?: string
+}
+
+interface Message {
+    jsx: JSX.Element
+    text: string
+    files: Array<File>
 }
 
 
@@ -66,15 +71,11 @@ class Lightning extends EventEmitter {
 
                 socket.emit('associated', remote_socket_id, stream_id);
             })
-
             this.localUser.socket = socket
-
         })
 
-        
         this.localUser = { user_name: user_name ? user_name : undefined, streamAdded: false, shareAdded: false }
         this.remotePeer = { }
-
     }
 
     getState = () => {
@@ -104,18 +105,14 @@ class Lightning extends EventEmitter {
                     this.remotePeer.peer?.addStream(this.localUser.stream);
                 }
             })
-            this.localUser.socket.emit('associate', this.remotePeer.socket_id, this.localUser.stream.id, 'normal');
-            
+            this.localUser.socket.emit('associate', this.remotePeer.socket_id, this.localUser.stream.id, 'normal');   
         }
-
         this.emit('state-change');
     }
 
     getShareScreen = async () => {
 
         if(this.remotePeer.peer?.connected && this.localUser.shareStream && this.localUser.shareAdded) {
-
-            //sugma
             this.remotePeer.peer.removeStream(this.localUser.shareStream);
             this.localUser.shareAdded = false;
         }
@@ -241,14 +238,13 @@ class Lightning extends EventEmitter {
             }
         })
 
-        peer.on('data', (data: string) => {
-            const msg = JSON.parse(data);
-
-            this.emit(msg.type, ...msg.payload);
+        peer.on('data', (data: SimplePeerData) => {
+            if(typeof data === 'string'){
+                const msg = JSON.parse(data);
+                this.emit(msg.type, ...msg.payload);
+            }
         })
 
-        
-        
         peer.on('stream', (stream) => {
 
             if(stream.id == this.remotePeer.shareStream_id) {
@@ -264,7 +260,6 @@ class Lightning extends EventEmitter {
                 //console.log('new stream', stream)
                 this.emit('state-change');
             }
-            
         })
 
         if(this.localUser.socket){
@@ -273,7 +268,6 @@ class Lightning extends EventEmitter {
                     peer.signal(data);
                 }
             })
-
             this.localUser.socket.on('user-disconnected', (socket_id: string) => {
                 if(socket_id == remote_socket_id) {
                     peer.destroy();
@@ -288,36 +282,50 @@ class Lightning extends EventEmitter {
                 this.localUser.socket.emit('existing-user', remote_socket_id);
             }
         }
-        
+    }
 
+    peerEmit = (type: string, ...payload: any[]) => {
+        const { peer } = this.remotePeer;
+        if(peer?.connected){
+            peer.send(JSON.stringify({
+                type: type,
+                payload: payload
+            }));
+            return true;
+        }
+        return false;
     }
 
     setVideo = (enabled: boolean) => {
         if(this.localUser.stream){
             this.localUser.stream.getVideoTracks()[0].enabled = enabled
-            this.remotePeer.peer?.send(JSON.stringify({
-                type: 'remote-video-enabled',
-                payload: [enabled]
-            }));
+            return this.peerEmit('remote-video-enabled', enabled);
         }
+        return false;
     }
 
     setAudio = (enabled: boolean) => {
         if(this.localUser.stream){
             this.localUser.stream.getAudioTracks()[0].enabled = enabled
-            this.remotePeer.peer?.send(JSON.stringify({
-                type: 'remote-audio-enabled',
-                payload: [enabled]
-            }));
+            return this.peerEmit('remote-audio-enabled', enabled);
         }
+        return false;
     }
 
     localStreamActive = () => {
-        return lightning.localUser.stream?.getAudioTracks()[0] != undefined
+        return this.localUser.stream?.getAudioTracks()[0] != undefined
     }
 
     localShareActive = () => {
-        return lightning.localUser.shareStream?.getVideoTracks()[0]?.enabled
+        return this.localUser.shareStream?.getVideoTracks()[0]?.enabled
+    }
+
+    sendText = (text: string) => {
+        return this.peerEmit('text', text);  
+    }
+
+    sendImage = () => {
+        
     }
 
 }
