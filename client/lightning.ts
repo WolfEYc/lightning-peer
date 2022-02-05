@@ -21,17 +21,18 @@ interface RemotePeer {
     shareStream_id?: string
 }
 
-interface Message {
-    jsx: JSX.Element
-    text: string
-    files: Array<File>
+interface LightningFile {
+    file?: File,
+    rawtext?: string,
+    size?: number
 }
-
 
 class Lightning extends EventEmitter {
 
     localUser: LocalUser
     remotePeer: RemotePeer
+    Files: Map<string, LightningFile>
+    chunkSize: number
 
     constructor() {
         super()
@@ -76,6 +77,8 @@ class Lightning extends EventEmitter {
 
         this.localUser = { user_name: user_name ? user_name : undefined, streamAdded: false, shareAdded: false }
         this.remotePeer = { }
+        this.Files = new Map<string, LightningFile>();
+        this.chunkSize = 16 * 1024;
     }
 
     getState = () => {
@@ -238,6 +241,25 @@ class Lightning extends EventEmitter {
             }
         })
 
+        this.on('file', (fileName: string, fileSize: number) => {
+
+            this.Files.set(fileName, { size: fileSize })
+
+            this.peerEmit('file-accepted', fileName);
+        })
+
+        this.on('chunk', (fileName: string, chunk: string) => {
+            const lFile = this.Files.get(fileName);
+            if(!lFile) return;
+            let { rawtext } = lFile;
+            rawtext = rawtext ? rawtext + chunk : chunk;
+            //if(rawtext.)
+        })
+
+        this.on('text', (local: boolean, text: string) => {
+            
+        })
+
         peer.on('data', (data: SimplePeerData) => {
             if(typeof data === 'string'){
                 const msg = JSON.parse(data);
@@ -324,8 +346,29 @@ class Lightning extends EventEmitter {
         return this.peerEmit('text', text);  
     }
 
-    sendImage = () => {
-        
+    sendFile = async (file: File) => {
+        const filetext = await file.text();
+
+        const acceptedHandler = (fileName: string) => {
+            if(fileName != file.name) return;
+            for(let i = 0; i < filetext.length; i += this.chunkSize)
+            {
+                const chunk = filetext.slice(i, i + this.chunkSize);
+                this.peerEmit('chunk', file.name, chunk);
+            }
+            this.Files.set(file.name, { file: file });
+        }
+
+        const declinedHandler = (fileName: string) => {
+            if(fileName != file.name) return;
+            this.removeListener('file-accepted', acceptedHandler);
+            this.removeListener('file-declined', declinedHandler);
+        }
+
+        this.on('file-accepted', acceptedHandler);
+        this.on('file-declined', declinedHandler);
+
+        this.peerEmit('file', file.name, filetext);
     }
 
 }
