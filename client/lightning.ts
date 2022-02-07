@@ -1,7 +1,6 @@
-import SimplePeer from 'simple-peer'
+import SimplePeer, { SimplePeerData } from 'simple-peer'
 import io, { Socket } from 'socket.io-client'
 import { EventEmitter } from 'events'
-
 
 interface LocalUser {
     socket?: Socket,
@@ -22,11 +21,19 @@ interface RemotePeer {
     shareStream_id?: string
 }
 
+interface LightningFile {
+    file?: File
+    rawtext?: string
+    size?: number
+    type?: string
+}
 
 class Lightning extends EventEmitter {
 
     localUser: LocalUser
     remotePeer: RemotePeer
+    Files: Map<string, LightningFile>
+    chunkSize: number
 
     constructor() {
         super()
@@ -66,15 +73,13 @@ class Lightning extends EventEmitter {
 
                 socket.emit('associated', remote_socket_id, stream_id);
             })
-
             this.localUser.socket = socket
-
         })
 
-        
         this.localUser = { user_name: user_name ? user_name : undefined, streamAdded: false, shareAdded: false }
         this.remotePeer = { }
-
+        this.Files = new Map<string, LightningFile>();
+        this.chunkSize = 16 * 1024;
     }
 
     getState = () => {
@@ -104,18 +109,14 @@ class Lightning extends EventEmitter {
                     this.remotePeer.peer?.addStream(this.localUser.stream);
                 }
             })
-            this.localUser.socket.emit('associate', this.remotePeer.socket_id, this.localUser.stream.id, 'normal');
-            
+            this.localUser.socket.emit('associate', this.remotePeer.socket_id, this.localUser.stream.id, 'normal');   
         }
-
         this.emit('state-change');
     }
 
     getShareScreen = async () => {
 
         if(this.remotePeer.peer?.connected && this.localUser.shareStream && this.localUser.shareAdded) {
-
-            //sugma
             this.remotePeer.peer.removeStream(this.localUser.shareStream);
             this.localUser.shareAdded = false;
         }
@@ -195,9 +196,13 @@ class Lightning extends EventEmitter {
         }
     }
 
-    peerConnect = (remote_socket_id: string, initiator = false) => {
+    finalizeFile = (filename: string, lFile: LightningFile) => {
+        if(!lFile.rawtext) return;
+        lFile.file = new File([lFile.rawtext], filename, { type: lFile.type });
+        this.emit('fileReceived', false, lFile.file);
+    }
 
-        
+    peerConnect = (remote_socket_id: string, initiator = false) => {
         const peer = new SimplePeer({ initiator: initiator });
 
         this.remotePeer.peer = peer;
@@ -241,14 +246,37 @@ class Lightning extends EventEmitter {
             }
         })
 
-        peer.on('data', (data: string) => {
-            const msg = JSON.parse(data);
-
-            this.emit(msg.type, ...msg.payload);
+        this.on('file', (fileName: string, fileSize: number, fileType: string) => {
+            this.Files.set(fileName, { size: fileSize, type: fileType })
+            this.peerEmit('file-accepted', fileName);
         })
 
-        
-        
+        this.on('chunk', (fileName: string, chunk: string) => {
+            const lFile = this.Files.get(fileName);
+            if(!lFile) return;
+            lFile.rawtext = lFile.rawtext ? lFile.rawtext + chunk : chunk;
+            if(lFile.rawtext.length === lFile.size) {
+                this.finalizeFile(fileName, lFile);
+            }
+        })
+
+        //yippie! this is just an example use case!
+        this.on('text', (local: boolean, text: string) => {
+            
+        })
+
+        //example as well
+        this.on('fileReceived', (local: boolean, file: File) => {
+            
+        })
+
+        peer.on('data', (data: SimplePeerData) => {
+            if(typeof data === 'string'){
+                const msg = JSON.parse(data);
+                this.emit(msg.type, ...msg.payload);
+            }
+        })
+
         peer.on('stream', (stream) => {
 
             if(stream.id == this.remotePeer.shareStream_id) {
@@ -264,7 +292,6 @@ class Lightning extends EventEmitter {
                 //console.log('new stream', stream)
                 this.emit('state-change');
             }
-            
         })
 
         if(this.localUser.socket){
@@ -273,7 +300,6 @@ class Lightning extends EventEmitter {
                     peer.signal(data);
                 }
             })
-
             this.localUser.socket.on('user-disconnected', (socket_id: string) => {
                 if(socket_id == remote_socket_id) {
                     peer.destroy();
@@ -288,36 +314,72 @@ class Lightning extends EventEmitter {
                 this.localUser.socket.emit('existing-user', remote_socket_id);
             }
         }
-        
+    }
 
+    peerEmit = (type: string, ...payload: any[]) => {
+        const { peer } = this.remotePeer;
+        if(peer?.connected){
+            peer.send(JSON.stringify({
+                type: type,
+                payload: payload
+            }));
+            return true;
+        }
+        return false;
     }
 
     setVideo = (enabled: boolean) => {
         if(this.localUser.stream){
             this.localUser.stream.getVideoTracks()[0].enabled = enabled
-            this.remotePeer.peer?.send(JSON.stringify({
-                type: 'remote-video-enabled',
-                payload: [enabled]
-            }));
+            return this.peerEmit('remote-video-enabled', enabled);
         }
+        return false;
     }
 
     setAudio = (enabled: boolean) => {
         if(this.localUser.stream){
             this.localUser.stream.getAudioTracks()[0].enabled = enabled
-            this.remotePeer.peer?.send(JSON.stringify({
-                type: 'remote-audio-enabled',
-                payload: [enabled]
-            }));
+            return this.peerEmit('remote-audio-enabled', enabled);
         }
+        return false;
     }
 
     localStreamActive = () => {
-        return lightning.localUser.stream?.getAudioTracks()[0] != undefined
+        return this.localUser.stream?.getAudioTracks()[0] != undefined
     }
 
     localShareActive = () => {
-        return lightning.localUser.shareStream?.getVideoTracks()[0]?.enabled
+        return this.localUser.shareStream?.getVideoTracks()[0]?.enabled
+    }
+
+    sendText = (text: string) => {
+        return this.peerEmit('text', text);  
+    }
+
+    sendFile = async (file: File) => {
+        const filetext = await file.text();
+
+        const acceptedHandler = (fileName: string) => {
+            if(fileName != file.name) return;
+            for(let i = 0; i < filetext.length; i += this.chunkSize)
+            {
+                const chunk = filetext.slice(i, i + this.chunkSize);
+                this.peerEmit('chunk', file.name, chunk);
+            }
+            this.Files.set(file.name, { file: file });
+            this.emit('fileReceived', true, file);
+        }
+
+        const declinedHandler = (fileName: string) => {
+            if(fileName != file.name) return;
+            this.removeListener('file-accepted', acceptedHandler);
+            this.removeListener('file-declined', declinedHandler);
+        }
+
+        this.on('file-accepted', acceptedHandler);
+        this.on('file-declined', declinedHandler);
+
+        this.peerEmit('file', file.name, filetext.length, file.type);
     }
 
 }
