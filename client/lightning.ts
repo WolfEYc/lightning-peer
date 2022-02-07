@@ -22,9 +22,10 @@ interface RemotePeer {
 }
 
 interface LightningFile {
-    file?: File,
-    rawtext?: string,
+    file?: File
+    rawtext?: string
     size?: number
+    type?: string
 }
 
 class Lightning extends EventEmitter {
@@ -195,9 +196,13 @@ class Lightning extends EventEmitter {
         }
     }
 
-    peerConnect = (remote_socket_id: string, initiator = false) => {
+    finalizeFile = (filename: string, lFile: LightningFile) => {
+        if(!lFile.rawtext) return;
+        lFile.file = new File([lFile.rawtext], filename, { type: lFile.type });
+        this.emit('fileReceived', false, lFile.file);
+    }
 
-        
+    peerConnect = (remote_socket_id: string, initiator = false) => {
         const peer = new SimplePeer({ initiator: initiator });
 
         this.remotePeer.peer = peer;
@@ -241,22 +246,27 @@ class Lightning extends EventEmitter {
             }
         })
 
-        this.on('file', (fileName: string, fileSize: number) => {
-
-            this.Files.set(fileName, { size: fileSize })
-
+        this.on('file', (fileName: string, fileSize: number, fileType: string) => {
+            this.Files.set(fileName, { size: fileSize, type: fileType })
             this.peerEmit('file-accepted', fileName);
         })
 
         this.on('chunk', (fileName: string, chunk: string) => {
             const lFile = this.Files.get(fileName);
             if(!lFile) return;
-            let { rawtext } = lFile;
-            rawtext = rawtext ? rawtext + chunk : chunk;
-            //if(rawtext.)
+            lFile.rawtext = lFile.rawtext ? lFile.rawtext + chunk : chunk;
+            if(lFile.rawtext.length === lFile.size) {
+                this.finalizeFile(fileName, lFile);
+            }
         })
 
+        //yippie! this is just an example use case!
         this.on('text', (local: boolean, text: string) => {
+            
+        })
+
+        //example as well
+        this.on('fileReceived', (local: boolean, file: File) => {
             
         })
 
@@ -357,6 +367,7 @@ class Lightning extends EventEmitter {
                 this.peerEmit('chunk', file.name, chunk);
             }
             this.Files.set(file.name, { file: file });
+            this.emit('fileReceived', true, file);
         }
 
         const declinedHandler = (fileName: string) => {
@@ -368,7 +379,7 @@ class Lightning extends EventEmitter {
         this.on('file-accepted', acceptedHandler);
         this.on('file-declined', declinedHandler);
 
-        this.peerEmit('file', file.name, filetext);
+        this.peerEmit('file', file.name, filetext.length, file.type);
     }
 
 }
