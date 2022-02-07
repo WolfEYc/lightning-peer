@@ -1,12 +1,10 @@
+import lightning from '../../client/lightning'
+import Stream from '../stream';
 
-interface props {
-
-}
-
-const Zero = (props: props) => {
+const Zero = () => {
     return (
-        <div>
-            
+        <div className="">
+             <Stream stream={lightning.localUser.stream} muted width={100} height={100}/>
         </div>
     )
 }
